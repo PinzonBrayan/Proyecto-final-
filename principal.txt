@@ -1,0 +1,219 @@
+function varargout = principal(varargin)
+% PRINCIPAL MATLAB code for principal.fig
+
+% --- Initialization code
+    gui_Singleton = 1;
+    gui_State = struct('gui_Name', mfilename, ...
+                       'gui_Singleton', gui_Singleton, ...
+                       'gui_OpeningFcn', @principal_OpeningFcn, ...
+                       'gui_OutputFcn', @principal_OutputFcn, ...
+                       'gui_LayoutFcn', [], ...
+                       'gui_Callback', []);
+
+    if nargin && ischar(varargin{1})
+        gui_State.gui_Callback = str2func(varargin{1});
+    end
+
+    if nargout
+        [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
+    else
+        gui_mainfcn(gui_State, varargin{:});
+    end
+end
+
+% --- Executes just before principal is made visible.
+function principal_OpeningFcn(hObject, eventdata, handles, varargin)
+    handles.output = hObject;
+    guidata(hObject, handles);
+
+    % Mostrar imagen de fondo
+    axes(handles.axes_fondo);
+    imshow('foto.png');
+    set(handles.axes_fondo, 'Units', 'normalized', 'Position', [0 0 1 1]);
+    axis off;
+    uistack(handles.axes_fondo, 'bottom');
+end
+
+% --- Outputs from this function are returned to the command line.
+function varargout = principal_OutputFcn(hObject, eventdata, handles)
+    varargout{1} = handles.output;
+end
+
+function edit_dimensiones_Callback(hObject, eventdata, handles)
+end
+
+function edit_dimensiones_CreateFcn(hObject, eventdata, handles)
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
+end
+
+function popup_riego_Callback(hObject, eventdata, handles)
+end
+
+function popup_riego_CreateFcn(hObject, eventdata, handles)
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
+end
+
+function popup_veces_riego_Callback(hObject, eventdata, handles)
+end
+
+function popup_veces_riego_CreateFcn(hObject, eventdata, handles)
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
+end
+
+function popup_epoca_Callback(hObject, eventdata, handles)
+end
+
+function popup_epoca_CreateFcn(hObject, eventdata, handles)
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
+end
+
+function popup_region_Callback(hObject, eventdata, handles)
+end
+
+function popup_region_CreateFcn(hObject, eventdata, handles)
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
+end
+
+function popup_terreno_Callback(hObject, eventdata, handles)
+end
+
+function popup_terreno_CreateFcn(hObject, eventdata, handles)
+    if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor','white');
+    end
+end
+
+function btn_calcular_agua_Callback(hObject, eventdata, handles)
+    try
+        area = str2double(get(handles.edit_dimensiones, 'String'));
+        if isnan(area) || area <= 0
+            errordlg('Ingresa un valor válido para el área.', 'Error');
+            return;
+        end
+
+        % Obtener valor de tipo de riego
+        tipoRiegoList = get(handles.popup_riego, 'String');
+        idxRiego = get(handles.popup_riego, 'Value');
+        tipoRiego = safe_index(tipoRiegoList, idxRiego);
+
+        % Obtener valor de época
+        epocaList = get(handles.popup_epoca, 'String');
+        idxEpoca = get(handles.popup_epoca, 'Value');
+        epoca = safe_index(epocaList, idxEpoca);
+
+        % Obtener valor de región
+        regionList = get(handles.popup_region, 'String');
+        idxRegion = get(handles.popup_region, 'Value');
+        region = safe_index(regionList, idxRegion);
+
+        % Obtener valor de terreno
+        terrenoList = get(handles.popup_terreno, 'String');
+        idxTerreno = get(handles.popup_terreno, 'Value');
+        terreno = safe_index(terrenoList, idxTerreno);
+
+        % Obtener valor de veces de riego
+        vecesList = get(handles.popup_veces_riego, 'String');
+        idxVeces = get(handles.popup_veces_riego, 'Value');
+        vecesStr = safe_index(vecesList, idxVeces);
+        veces = str2double(strtrim(vecesStr));
+
+        % Parámetros base
+        x0 = 200;
+        y0 = 50;
+        z0 = 1;
+        f0 = 1000;
+
+        % Coeficientes
+        df_dx = 1.2;
+        df_dy = 0;
+        df_dz = 1.8;
+
+        % Ajustar valor de y según tipo de riego
+        switch lower(tipoRiego)
+            case 'aspersión'
+                y = 60;
+            case 'goteo'
+                y = 30;
+            case 'surcos'
+                y = 80;
+            otherwise
+                y = 50;
+        end
+
+        ajuste_region = switch_region(region);
+        ajuste_terreno = switch_terreno(terreno);
+        ajuste_epoca = switch_epoca(epoca);
+
+        gasto_estimado = f0 + df_dx*(area - x0) + df_dy*(y - y0) + df_dz*(veces - z0);
+        gasto_estimado = gasto_estimado * ajuste_region * ajuste_terreno * ajuste_epoca;
+
+        respuesta = inputdlg('¿Para cuántos meses desea calcular?', 'Duración', [1 50], {'1'});
+        if isempty(respuesta)
+            return;
+        end
+        nmes = str2double(respuesta{1});
+        gasto_total = gasto_estimado * nmes;
+
+        msgbox(sprintf('>> Gasto estimado de agua:\n%.2f litros', gasto_total), 'Resultado Agua');
+
+    catch err
+        errordlg(['Error en cálculo de agua: ' err.message], 'Error');
+    end
+end
+
+% --- Función auxiliar para indexar popups de forma segura
+function val = safe_index(list, idx)
+    if iscell(list)
+        val = list{idx};
+    elseif ischar(list)
+        val = strtrim(list(idx, :));  % eliminar espacios si es char array
+    else
+        val = '';
+    end
+end
+
+% --- Funciones para ajustes
+function val = switch_region(region)
+    switch lower(region)
+        case 'occidente'
+            val = 1.0;
+        case 'costa'
+            val = 1.1;
+        case 'oriente'
+            val = 1.2;
+        otherwise
+            val = 1.0;
+    end
+end
+
+function val = switch_terreno(terreno)
+    switch lower(terreno)
+        case 'plano'
+            val = 1.0;
+        case 'montañoso'
+            val = 1.3;
+        otherwise
+            val = 1.0;
+    end
+end
+
+function val = switch_epoca(epoca)
+    switch lower(epoca)
+        case 'verano'
+            val = 1.3;
+        case 'invierno'
+            val = 1.0;
+        otherwise
+            val = 1.0;
+    end
+end

@@ -1,0 +1,80 @@
+function varargout = login(varargin)
+% LOGIN MATLAB code for login.fig
+%      LOGIN, by itself, creates a new LOGIN or raises the existing singleton*.
+
+% Edit the above text to modify the response to help login
+
+% Last Modified by GUIDE v2.5 08-May-2025
+
+gui_Singleton = 1;
+gui_State = struct('gui_Name',       mfilename, ...
+                   'gui_Singleton',  gui_Singleton, ...
+                   'gui_OpeningFcn', @login_OpeningFcn, ...
+                   'gui_OutputFcn',  @login_OutputFcn, ...
+                   'gui_LayoutFcn',  [] , ...
+                   'gui_Callback',   []);
+if nargin && ischar(varargin{1})
+    gui_State.gui_Callback = str2func(varargin{1});
+end
+
+if nargout
+    [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
+else
+    gui_mainfcn(gui_State, varargin{:});
+end
+end
+
+% --- Executes just before login is made visible.
+function login_OpeningFcn(hObject, eventdata, handles, varargin)
+
+% Fondo de la GUI (imagen)
+axes('units','normalized','position',[0 0 1 1]);
+imshow('logo.png'); % Asegúrate de tener esta imagen en la carpeta del proyecto
+uistack(handles.editUsuario, 'top');
+uistack(handles.editPassword, 'top');
+uistack(handles.pushLogin, 'top');
+
+handles.output = hObject;
+guidata(hObject, handles);
+end
+
+% --- Outputs from this function are returned to the command line.
+function varargout = login_OutputFcn(hObject, eventdata, handles) 
+varargout{1} = handles.output;
+end
+
+% --- Callback del botón de login
+function pushLogin_Callback(hObject, eventdata, handles)
+usuario = get(handles.editUsuario, 'String');
+contrasena = get(handles.editPassword, 'String');
+
+% Credenciales válidas
+usuario_valido = 'admin';
+contrasena_valida = '1234';
+
+if strcmp(usuario, usuario_valido) && strcmp(contrasena, contrasena_valida)
+    msgbox('¡Acceso concedido!', 'Login Correcto');
+    close(gcf);  % Cierra la GUI de login
+    principal;   % Abre la GUI principal (asegúrate de tener principal.fig y principal.m)
+else
+    msgbox('Usuario o contraseña incorrectos', 'Error', 'error');
+end
+end
+
+function editUsuario_Callback(hObject, eventdata, handles)
+end
+
+function editUsuario_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+end
+
+function editPassword_Callback(hObject, eventdata, handles)
+end
+
+function editPassword_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+end
